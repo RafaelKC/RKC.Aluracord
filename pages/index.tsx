@@ -1,12 +1,13 @@
 import { Box, Button, Text, TextField, Image } from "@skynexui/components";
-import React, { ReactElement } from "react";
+import React, { ReactElement, ReactNode } from "react";
 import appConfig from "./../config.json";
 
-interface Props extends React.HTMLProps<string> {
-  tag: string;
+interface TitleProps {
+  children: ReactNode;
+  tag: keyof JSX.IntrinsicElements;
 }
 
-function Title(props: Props): ReactElement {
+function Title(props: TitleProps): ReactElement {
   const Tag = props.tag || "h1";
   return (
     <>
