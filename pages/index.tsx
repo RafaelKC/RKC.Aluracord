@@ -1,29 +1,12 @@
 import { Box, Button, Text, TextField, Image } from "@skynexui/components";
-import React, { ReactElement, ReactNode } from "react";
+import { useRouter } from "next/router";
+import React, { useState } from "react";
+import { Title } from "../components/title";
 import appConfig from "./../config.json";
 
-interface TitleProps {
-  children: ReactNode;
-  tag: keyof JSX.IntrinsicElements;
-}
-
-function Title(props: TitleProps): ReactElement {
-  const Tag = props.tag || "h1";
-  return (
-    <>
-      <Tag>{props.children}</Tag>
-      <style jsx>{`
-        ${Tag} {
-          font-size: 24px;
-          font-weight: 600;
-        }
-      `}</style>
-    </>
-  );
-}
-
 export default function PaginaInicial() {
-  const username = 'RafaelKC';
+  const [username, setUsername] = useState<string>('');
+  const route = useRouter();
 
   return (
     <>
@@ -52,18 +35,20 @@ export default function PaginaInicial() {
         >
           {/* Formulário */}
           <Box
-            as="form"
+            tag="form"
             styleSheet={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               width: { xs: '100%', sm: '50%' }, textAlign: 'center', marginBottom: '32px',
             }}
           >
-            <Title tag="h2">Boas vindas de volta!</Title>
+            <Title tag="h2">Wellcome back!</Title>
             <Text variant="body3" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals[300] }}>
               {appConfig.name}
             </Text>
 
             <TextField
+              onChange={(event) => {setUsername(event.target.value)}}            
+              value={username}
               fullWidth
               textFieldColors={{
                 neutral: {
@@ -78,8 +63,13 @@ export default function PaginaInicial() {
               type='submit'
               label='Entrar'
               fullWidth
+              disabled={username.length <= 2}
+              onClick={(event: any) => {
+                event.preventDefault();
+                route.push('chat') 
+              }}
               buttonColors={{
-                contrastColor: appConfig.theme.colors.neutrals["000"],
+                contrastColor: appConfig.theme.colors.neutrals[000],
                 mainColor: appConfig.theme.colors.primary[500],
                 mainColorLight: appConfig.theme.colors.primary[400],
                 mainColorStrong: appConfig.theme.colors.primary[600],
@@ -105,13 +95,19 @@ export default function PaginaInicial() {
               minHeight: '240px',
             }}
           >
-            <Image
+            
+            {
+            username.length > 2 && <Image
               styleSheet={{
                 borderRadius: '50%',
                 marginBottom: '16px',
               }}
               src={`https://github.com/${username}.png`}
             />
+            }
+
+            
+
             <Text
               variant="body4"
               styleSheet={{
