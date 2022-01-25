@@ -2,15 +2,27 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
+  font-family: Segoe UI
 }
 
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
+  list-style: none;
+  color: rgb(255, 253, 231);
+  background-color: rgb(16, 23, 37);
 }
+/* App fit Height */ 
+html, body, #__next {
+  min-height: 100vh;
+  display: flex;
+  flex: 1;
+}
+#__next {
+  flex: 1;
+}
+#__next > * {
+  flex: 1;
+}
+/* ./App fit Height */ 
