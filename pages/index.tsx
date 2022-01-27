@@ -1,12 +1,24 @@
 import { Box, Button, Text, TextField, Image } from "@skynexui/components";
+import axios from "axios";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { Title } from "../components/title";
+import GitHubUserApiOutput from "../models/github-user-api-output.model";
 import appConfig from "./../config.json";
 
 export default function PaginaInicial() {
   const [username, setUsername] = useState<string>('');
+  const [user, setUser] = useState<GitHubUserApiOutput>({} as GitHubUserApiOutput);
   const route = useRouter();
+
+  const setNewUser = (userName: string) => {
+    setUsername(userName);
+      axios.get(`api/users/${userName}`)
+        .then(result => { setUser(result.data as GitHubUserApiOutput) })
+        .catch(err => {
+          console.log(err);
+        });
+  }
 
   return (
     <>
@@ -47,7 +59,7 @@ export default function PaginaInicial() {
             </Text>
 
             <TextField
-              onChange={(event) => {setUsername(event.target.value)}}            
+              onChange={(event) => {setNewUser(event.target.value)}}            
               value={username}
               fullWidth
               textFieldColors={{
@@ -102,7 +114,7 @@ export default function PaginaInicial() {
                 borderRadius: '50%',
                 marginBottom: '16px',
               }}
-              src={`https://github.com/${username}.png`}
+              src={user.avatar_url}
             />
             }
 
@@ -117,7 +129,19 @@ export default function PaginaInicial() {
                 borderRadius: '1000px'
               }}
             >
-              {username}
+              {user.login}
+            </Text>
+              <br/>
+            <Text
+              variant="body4"
+              styleSheet={{
+                color: appConfig.theme.colors.neutrals[200],
+                backgroundColor: appConfig.theme.colors.neutrals[900],
+                padding: '3px 10px',
+                borderRadius: '1000px'
+              }}
+            >
+              {user.name}
             </Text>
           </Box>
           {/* Photo Area */}
