@@ -2,18 +2,11 @@ import { Box, Text, Image, Button } from "@skynexui/components";
 import { Guid } from "guid-typescript";
 import React from "react";
 import appConfig from "../../config.json";
+import { IMessage } from "../../models/i-message";
 
 export interface IMessageListInput {
   mensagens: IMessage[];
   onRemove(itemId: Guid): void;
-}
-
-export interface IMessage {
-  id: Guid;
-  texto: string;
-  de: string;
-  dataEnvio: Date;
-  imgUrl: string;
 }
 
 export const MessageList = (props: IMessageListInput) => {

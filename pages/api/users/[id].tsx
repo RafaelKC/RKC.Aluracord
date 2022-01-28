@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { NextApiRequest, NextApiResponse } from 'next';
-import GitHubUserApiOutput from '../../../models/github-user-api-output.model';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'GET') {
