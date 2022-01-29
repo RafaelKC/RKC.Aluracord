@@ -78,7 +78,7 @@ export default function PaginaInicial() {
               disabled={username.length <= 2}
               onClick={(event: any) => {
                 event.preventDefault();
-                route.push('chat') 
+                route.push(`chat?username=${username}`)
               }}
               buttonColors={{
                 contrastColor: appConfig.theme.colors.neutrals[000],

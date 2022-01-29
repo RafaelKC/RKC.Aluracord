@@ -1,26 +1,129 @@
-import { Box, TextField, Button, Icon } from "@skynexui/components";
+import { Box, TextField, Button } from "@skynexui/components";
+import { createClient } from "@supabase/supabase-js";
+import axios from "axios";
 import { Guid } from "guid-typescript";
-import React, { useState } from "react";
+import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react";
+import { setTimeout } from "timers";
+import { BtnSendSticker } from "../components/BtnSendeSticker";
 import { Header } from "../components/Header";
-import { IMessage, MessageList } from "../components/MessageList";
+import { MessageList } from "../components/MessageList";
 import appConfig from "../config.json";
+import { IMessage } from "../models/i-message";
+
 
 export default function ChatPage() {
+  const [supabaseUrl, setSupabaseUrl] = useState("");
+  const [supabaseAnomKey, setSupabaseAnomKey] = useState("");
+
+  const router = useRouter();
+  const username = router.query.username as string;
   const [userMessagem, setUserMesagem] = useState("");
   const [messageList, setMessageList] = useState([] as IMessage[]);
+
+  useEffect(() => {
+    axios.get<{SUPABASE_URL:string, SUPABASE_ANOM_KEY:string}>('api/supabase')
+    .then(result => {
+        setSupabaseUrl(result.data.SUPABASE_URL);
+        setSupabaseAnomKey(result.data.SUPABASE_ANOM_KEY);
+
+        listenInRealTimeMessages(result.data.SUPABASE_URL, result.data.SUPABASE_ANOM_KEY, (newMessage) => {
+          setMessageList((currentList) => {
+            return [newMessage, ...currentList]
+          })
+        }, (id: Guid) => {
+          setMessageList(currentList => {
+            const messageToRemove = currentList.filter(messagem => messagem.id['value'] === id['value'])[0];
+            if (messageToRemove === null) {
+              console.log(currentList)
+              return currentList;
+            }
+            const messageListFiltered = messageList.filter(messagem => {
+              console.log(messagem)
+              console.log(messagem.id !== id)
+              console.log(messagem.id === id)
+              console.log(messagem.id.equals(id))
+              console.log(id)
+              return messagem.id !== id
+            });            
+            return messageListFiltered;
+          })         
+        });
+        getInitialMessages(result.data.SUPABASE_URL, result.data.SUPABASE_ANOM_KEY);
+    })
+    }, [])
+
+  const getInitialMessages = (supabaseUrl: string, supabaseAnomKey: string) => {
+    const supabaseClient = createClient(supabaseUrl, supabaseAnomKey);
+
+    supabaseClient
+      .from('messages')
+      .select('*')
+      .order('dataEnvio', { ascending: false })
+      .then((messages) => {
+          if(!messages.data) return;
+        setMessageList(messages.data);
+      })
+  }
+  
+  const listenInRealTimeMessages = (supabaseUrl: string, supabaseAnomKey: string, newMsg: (message: IMessage) => void, remove: (msgId: Guid) => void) => {
+    const supabaseClient = createClient(supabaseUrl, supabaseAnomKey);
+
+    supabaseClient
+    .from('messages')
+    .on('INSERT', (result) => {
+      newMsg(result.new)
+    })
+    .subscribe();
+
+    supabaseClient
+    .from('messages')
+    .on('DELETE', (result) => {
+      remove(result.old)
+    })
+  }
+
+  const insertMessageOnDb = (message: IMessage) => {
+    const supabaseClient = createClient(supabaseUrl, supabaseAnomKey);
+    supabaseClient
+    .from('messages')
+    .insert({
+      dataEnvio: message.dataEnvio,
+      de: message.de,
+      id: message.id['value'],
+      imgUrl: message.imgUrl,
+      texto: message.texto,
+    })
+    .then();
+  }
 
   const handleNovaMenssagem = (newMessage: IMessage) => {
     if (newMessage.texto.length > 0){
       if (newMessage.texto !== null && newMessage.texto.trim() !== '') {
-        setMessageList([newMessage, ...messageList]);
+        insertMessageOnDb(newMessage);
         setUserMesagem("");
       }
     }   
   };
 
   const onRemove = (itemId: Guid): void => {
-    const messageListFiltered = messageList.filter(messagem => !messagem.id.equals(itemId));
+    const messageToRemove = messageList.filter(messagem => messagem.id['value'] === itemId['value'])[0];
+
+    if (messageToRemove.de !== username) return;
+
+    const messageListFiltered = messageList.filter(messagem => {
+      return messagem.id !== itemId
+    });
     setMessageList(messageListFiltered);
+
+    const supabaseClient = createClient(supabaseUrl, supabaseAnomKey);
+
+    supabaseClient
+    .from('messages')
+    .delete()
+    .match({id: messageToRemove.id})
+    .then();
+
   }
 
   return (
@@ -67,6 +170,7 @@ export default function ChatPage() {
           <MessageList
           mensagens={messageList}
           onRemove={onRemove}
+          username={username}
           />
 
           <Box
@@ -90,9 +194,9 @@ export default function ChatPage() {
                   const newMensagem = {
                     id: Guid.create(),
                     dataEnvio: new Date(),
-                    de: "Rafael",
+                    de: username,
                     texto: userMessagem,
-                    imgUrl: `https://github.com/${"RafaelKC"}.png`,
+                    imgUrl: `https://github.com/${username}.png`,
                   } as IMessage;
                   handleNovaMenssagem(newMensagem);
                 }
@@ -111,6 +215,16 @@ export default function ChatPage() {
               }}
               name="input"
             />
+            <BtnSendSticker onStickerClick={(sticker: string) => {
+              const newMensagem = {
+                id: Guid.create(),
+                dataEnvio: new Date(),
+                de: username,
+                texto: `:sticker: ${sticker}`,
+                imgUrl: `https://github.com/${username}.png`,
+              } as IMessage;
+              handleNovaMenssagem(newMensagem);
+            } }></BtnSendSticker>
             <Button
               variant="tertiary"
               colorVariant="accent"
@@ -121,9 +235,9 @@ export default function ChatPage() {
                 const newMensagem = {
                   id: Guid.create(),
                   dataEnvio: new Date(),
-                  de: "Rafael",
+                  de: username,
                   texto: userMessagem,
-                  imgUrl: `https://github.com/${"RafaelKC"}.png`,
+                  imgUrl: `https://github.com/${username}.png`,
                 } as IMessage;
                 handleNovaMenssagem(newMensagem);
               }}
